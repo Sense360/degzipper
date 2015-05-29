@@ -77,4 +77,21 @@ RSpec.describe Degzipper::Middleware do
       'length' => 6
     )
   end
+  
+  it "passes an empty body if invalid gzip data" do
+    _, _, body = middleware.call(Rack::MockRequest.env_for(
+      '/',
+      method: 'POST',
+      input: 'NOT GZIP BODY',
+      'HTTP_CONTENT_ENCODING' => 'gzip'
+    ))
+
+    parsed_body = JSON.parse(body.first)
+
+    expect(parsed_body).to eq(
+      'body' => '{}',
+      'content_encoding' => nil,
+      'length' => 2
+    )
+  end
 end
