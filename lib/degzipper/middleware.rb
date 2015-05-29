@@ -14,7 +14,15 @@ module Degzipper
 
     def call(env)
       if method_handled?(env) && encoding_handled?(env)
-        extracted = decode(env['rack.input'], env['HTTP_CONTENT_ENCODING'])
+        begin
+          extracted = decode(env['rack.input'], env['HTTP_CONTENT_ENCODING'])
+        rescue Zlib::GzipFile::Error => e
+          if defined?(ErrorReporter)
+            ErrorReporter.warning("GzipError", e.message)
+          end
+
+          extracted = "{}"
+        end
 
         env.delete('HTTP_CONTENT_ENCODING')
         env['CONTENT_LENGTH'] = extracted.bytesize
