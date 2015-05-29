@@ -21,7 +21,7 @@ module Degzipper
             ErrorReporter.warning("GzipError", e.message)
           end
 
-          extracted = "{}"
+          extracted = ""
         end
 
         env.delete('HTTP_CONTENT_ENCODING')

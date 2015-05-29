@@ -89,9 +89,9 @@ RSpec.describe Degzipper::Middleware do
     parsed_body = JSON.parse(body.first)
 
     expect(parsed_body).to eq(
-      'body' => '{}',
+      'body' => '',
       'content_encoding' => nil,
-      'length' => 2
+      'length' => 0
     )
   end
 end
