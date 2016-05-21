@@ -1,5 +1,8 @@
 module Degzipper
   class Middleware
+
+    EXCLUDED_PATHS = Set.new
+
     def initialize(app)
       @app = app
     end
@@ -12,8 +15,12 @@ module Degzipper
       ['gzip', 'deflate'].include? env['HTTP_CONTENT_ENCODING']
     end
 
+    def path_handled?(path)
+      !EXCLUDED_PATHS.include?(path)
+    end
+
     def call(env)
-      if method_handled?(env) && encoding_handled?(env)
+      if method_handled?(env) && encoding_handled?(env) && path_handled?(env['PATH_INFO'])
         begin
           extracted = decode(env['rack.input'], env['HTTP_CONTENT_ENCODING'])
         rescue Zlib::GzipFile::Error => e
@@ -26,7 +33,7 @@ module Degzipper
 
         env.delete('HTTP_CONTENT_ENCODING')
         env['CONTENT_LENGTH'] = extracted.bytesize
-        env['rack.input'] = StringIO.new(extracted)
+        env['rack.input']     = StringIO.new(extracted)
       end
 
       status, headers, response = @app.call(env)
@@ -35,8 +42,10 @@ module Degzipper
 
     def decode(input, content_encoding)
       case content_encoding
-        when 'gzip' then Zlib::GzipReader.new(input).read
-        when 'deflate' then Zlib::Inflate.inflate(input.read)
+        when 'gzip' then
+          Zlib::GzipReader.new(input).read
+        when 'deflate' then
+          Zlib::Inflate.inflate(input.read)
       end
     end
   end
